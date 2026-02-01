@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS papers (
+  id SERIAL PRIMARY KEY,
+  file_path TEXT UNIQUE NOT NULL,
+  title TEXT,
+  document_type TEXT,
+  publication_date DATE,
+  journal_title TEXT,
+  book_title TEXT,
+  publisher TEXT,
+  authors TEXT[],
+  affiliations TEXT[],
+  countries TEXT[],
+  abstract TEXT,
+  year INTEGER,
+  keywords TEXT[],
+  raw_text_snippet TEXT,
+  processed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

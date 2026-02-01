@@ -1,0 +1,13 @@
+[project]
+name = "academic-db"
+version = "0.1.0"
+description = "Simple Postgres + Python ingestion for academic paper metadata."
+requires-python = ">=3.9"
+dependencies = [
+  "PyPDF2>=3.0.1",
+  "psycopg2-binary>=2.9.9",
+  "requests>=2.32.0",
+]
+
+[dependency-groups]
+dev = []

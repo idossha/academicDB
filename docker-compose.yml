@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: academic_db_postgres
+    environment:
+      POSTGRES_DB: academic
+      POSTGRES_USER: academic
+      POSTGRES_PASSWORD: academic
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  grobid:
+    image: grobid/grobid:0.8.2-crf
+    container_name: academic_db_grobid
+    platform: linux/amd64
+    ports:
+      - "8070:8070"
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx2g
+
+volumes:
+  postgres_data:
