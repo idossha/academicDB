@@ -9,6 +9,7 @@ from xml.etree import ElementTree
 import psycopg2
 import requests
 from PyPDF2 import PdfReader
+from PyPDF2.errors import PdfReadError
 
 
 DEFAULT_DB_CONFIG = {
@@ -22,7 +23,10 @@ DEFAULT_GROBID_URL = os.getenv("GROBID_URL", "http://localhost:8070")
 
 
 def extract_text_from_pdf(pdf_path: Path, max_pages: int = 2) -> str:
-    reader = PdfReader(str(pdf_path))
+    try:
+        reader = PdfReader(str(pdf_path))
+    except PdfReadError:
+        return ""
     text_chunks = []
     for page in reader.pages[:max_pages]:
         page_text = page.extract_text() or ""
