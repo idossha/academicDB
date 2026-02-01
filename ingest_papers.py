@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+import unicodedata
 from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -33,6 +34,43 @@ def extract_text_from_pdf(pdf_path: Path, max_pages: int = 2) -> str:
         if page_text:
             text_chunks.append(page_text)
     return "\n".join(text_chunks)
+
+
+def to_ascii_slug(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+    ascii_value = re.sub(r"[^A-Za-z0-9]+", "_", ascii_value).strip("_")
+    return re.sub(r"_+", "_", ascii_value).lower()
+
+
+def build_filename(metadata: Dict) -> str:
+    year = str(metadata.get("year") or "unknown")
+    authors = metadata.get("authors") or []
+    author_token = "unknown"
+    if authors:
+        first_author = str(authors[0]).strip()
+        if first_author:
+            author_token = to_ascii_slug(first_author.split()[-1]) or "unknown"
+    title = str(metadata.get("title") or "paper")
+    title_token = to_ascii_slug(title) or "paper"
+    base = f"{year}_{author_token}_{title_token}".strip("_")
+    return base[:80] if len(base) > 80 else base
+
+
+def rename_pdf(pdf_path: Path, metadata: Dict, dry_run: bool) -> Path:
+    target_name = f"{build_filename(metadata)}.pdf"
+    target_path = pdf_path.with_name(target_name)
+    if target_path == pdf_path:
+        return pdf_path
+    if dry_run:
+        print(f"[DRY RUN] Rename: {pdf_path.name} -> {target_path.name}")
+        return target_path
+    counter = 1
+    while target_path.exists():
+        target_path = pdf_path.with_name(f"{build_filename(metadata)}_{counter}.pdf")
+        counter += 1
+    pdf_path.rename(target_path)
+    return target_path
 
 
 def grobid_is_available(base_url: str) -> bool:
@@ -377,6 +415,7 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Parse files without writing to DB.")
     parser.add_argument("--no-grobid", action="store_true", help="Skip GROBID metadata extraction.")
     parser.add_argument("--grobid-url", default=DEFAULT_GROBID_URL, help="Base URL for GROBID.")
+    parser.add_argument("--no-rename", action="store_true", help="Skip PDF renaming.")
     args = parser.parse_args()
 
     directory = Path(args.directory).expanduser().resolve()
@@ -405,6 +444,8 @@ def main() -> None:
         if not metadata:
             metadata = extract_metadata(text)
         metadata["raw_text_snippet"] = text[:500].strip() if text else None
+        if not args.no_rename:
+            pdf_path = rename_pdf(pdf_path, metadata, args.dry_run)
         processed += 1
 
         if args.dry_run:

@@ -50,6 +50,7 @@ Database defaults match `docker-compose.yml` (Postgres exposed on `5433` to avoi
 - Keyword parsing falls back to `Keywords:` or `Index Terms:` in the first pages.
 - When only a year/month is available, `publication_date` is set to the first day of the month/year.
 - After schema changes, recreate the DB with `docker compose down -v && docker compose up -d`.
+- Ingestion renames PDFs using a short `year_author_title.pdf` scheme (disable with `--no-rename`).
 
 ## Daily cron on Raspberry Pi
 
